@@ -1,0 +1,15 @@
+
+
+ string siteUrl = "https://tsinfo.sharepoint.com/sites/SharePointSky/";
+
+      var authManager = new OfficeDevPnP.Core.AuthenticationManager();
+
+      ClientContext ctx = authManager.GetWebLoginClientContext(siteUrl);
+
+      Web web = ctx.Web;
+
+      ctx.Load(web, w => w.Title);
+
+      ctx.ExecuteQuery();
+
+      label1.Text = web.Title;

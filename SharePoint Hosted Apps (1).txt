@@ -1,0 +1,240 @@
+Get Host Web Details:
+App.js:
+'use strict';
+
+ExecuteOrDelayUntilScriptLoaded(getHostSiteName, "sp.js");
+var web;
+function getHostSiteName() {
+    var hostUrl = decodeURIComponent(getURLParameters("SPHostUrl"));
+    var currentcontext = new SP.ClientContext.get_current();
+    var hostcontext = new SP.AppContextSite(currentcontext, hostUrl);
+    web = hostcontext.get_web();
+    currentcontext.load(web, "Title");
+    currentcontext.executeQueryAsync(onSuccess, onFailure);
+}
+
+function onSuccess() {
+    $('#message').text("Host web title " + web.get_title());
+}
+
+function onFailure(sender, args) {
+    alert('Failed to get web title. Error:' + args.get_message());
+}
+
+function getURLParameters(param) {
+    var params = document.URL.split('?')[1].split('&');
+    var strParams = '';
+    for (var i = 0; i < params.length; i = i + 1) {
+        var singleParam = params[i].split('=');
+        if (singleParam[0] == param) {
+            return singleParam[1];
+        }
+    }
+}
+
+
+=================
+
+Host Web List Data:
+Developer Site:
+'use strict';
+
+ExecuteOrDelayUntilScriptLoaded(getHostSiteName, "sp.js");
+var web;
+var collListItem;
+function getHostSiteName() {
+    
+var hostUrl = decodeURIComponent(getURLParameters("SPHostUrl"));
+
+    var currentcontext = new SP.ClientContext.get_current();
+
+    var hostcontext = new SP.AppContextSite(currentcontext, hostUrl);
+    web = hostcontext.get_web();
+
+    var oList = web.get_lists().getByTitle('CategoryList');
+    var camlQuery = new SP.CamlQuery();
+    collListItem = oList.getItems(camlQuery);
+    currentcontext.load(collListItem);
+    currentcontext.executeQueryAsync(onSuccess, onFailure);
+}
+
+function onSuccess() {
+    var listItemInfo = '';
+    var listItemEnumerator = collListItem.getEnumerator();
+    while (listItemEnumerator.moveNext()) {
+        var oListItem = listItemEnumerator.get_current();
+        listItemInfo += '<strong>ID: </strong> ' + oListItem.get_id() +
+        ' <strong>Category ID:</strong> ' + oListItem.get_item('Title') +
+        ' <strong>Category Name:</strong> ' + oListItem.get_item('CategoryName') +        
+        '<br />';
+    }
+    $("#message").html(listItemInfo);
+}
+
+function onFailure(sender, args) {
+    alert('Failed to get web title. Error:' + args.get_message());
+}
+
+function getURLParameters(param) {
+    var params = document.URL.split('?')[1].split('&');
+    var strParams = '';
+    for (var i = 0; i < params.length; i = i + 1) {
+        var singleParam = params[i].split('=');
+        if (singleParam[0] == param) {
+            return singleParam[1];
+        }
+    }
+}
+
+
+=================
+
+
+
+Insert to List using JavaScript object model:
+
+Default.aspx
+<h1>Insert Item to List</h1><br /><br />
+    Category Title: <input type="text" id="txtTitle" /><br />
+    Category Name: <input type="text" id="txtName" /><br />
+     <input id="btnSubmit" type="button" value="Submit" /><br />
+    <div>
+        <p id="message">
+            <!-- The following content will be replaced with the user name when you run the app - see App.js -->
+           
+        </p>
+    </div>
+
+App.Js Code:
+'use strict';
+
+ExecuteOrDelayUntilScriptLoaded(bindButtonClick, "sp.js");
+
+function bindButtonClick() {
+    $("#btnSubmit").on("click", function () {
+        addListItem();
+    });
+}
+
+var web;
+var collListItem;
+function addListItem() {
+    var title = $("#txtTitle").val();
+    var catagoryname = $("#txtName").val();
+    var hostUrl = decodeURIComponent(getURLParameters("SPHostUrl"));
+    var currentcontext = new SP.ClientContext.get_current();
+    var hostcontext = new SP.AppContextSite(currentcontext, hostUrl);
+    web = hostcontext.get_web();
+    var oList = web.get_lists().getByTitle('CategoryList');
+    var itemCreateInfo = new SP.ListItemCreationInformation();
+    var oListItem = oList.addItem(itemCreateInfo);
+    oListItem.set_item('Title', title);
+    oListItem.set_item('CategoryName', catagoryname);
+    oListItem.update();
+    currentcontext.load(oListItem);
+    currentcontext.executeQueryAsync(onSuccess, onFailure);
+}
+
+function onSuccess() {    
+    $("#message").html('Item added to the list...');
+}
+
+function onFailure(sender, args) {
+    alert('Failed to get web title. Error:' + args.get_message());
+}
+
+function getURLParameters(param) {
+    var params = document.URL.split('?')[1].split('&');
+    var strParams = '';
+    for (var i = 0; i < params.length; i = i + 1) {
+        var singleParam = params[i].split('=');
+        if (singleParam[0] == param) {
+            return singleParam[1];
+        }
+    }
+}
+
+
+
+
+=========================
+
+
+<h2>Create List using JavaScript Object Model (jsom) SharePoint Online</h2>
+    <br />
+    <table>
+        <tr>
+            <td>List Title:</td>
+            <td>
+                <input type="text" id="txtTitle" size="40" /></td>
+        </tr>
+        <tr>
+            <td>List URL:</td>
+            <td>
+                <input type="text" id="txtURL" size="40" /></td>
+        </tr>
+        <tr>
+            <td>List Description:</td>
+            <td>
+                <textarea rows="4" cols="50" id="txtDescription"></textarea></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <input id="btnCreate" type="button" value="Create List" />
+            </td>
+        </tr>
+    </table>
+
+
+    <div>
+        <p id="message">
+            <!-- The following content will be replaced with the user name when you run the app - see App.js -->
+           
+        </p>
+    </div>
+
+
+$(document).ready(function () {
+    $("#btnCreate").click(function () {
+        CreateList();
+    });
+});
+function CreateList() {
+    var title = $("#txtTitle").val();
+    var url = $("#txtURL").val();
+    var description = $("#txtDescription").val();
+
+    var hostUrl = decodeURIComponent(getURLParameters("SPHostUrl")); //Host URL
+    var context = new SP.ClientContext.get_current();
+    var hostcontext = new SP.AppContextSite(context, hostUrl); //Host Context
+    var curWeb = hostcontext.get_web(); //Host Web
+
+    var listCreationInfo = new SP.ListCreationInformation();
+    listCreationInfo.set_title(title);
+    listCreationInfo.set_url(url);
+    listCreationInfo.set_description(description);
+    listCreationInfo.set_templateType(SP.ListTemplateType.genericList);
+    var myList = curWeb.get_lists().add(listCreationInfo);
+    context.executeQueryAsync(onSuccess, onFailure);
+}
+function onSuccess() {
+    $('#message').text('List Created Successfully');    
+}
+function onFailure() {
+    alert('Error while creating the list');
+}
+
+function getURLParameters(param) {
+    var params = document.URL.split('?')[1].split('&');
+    var strParams = '';
+    for (var i = 0; i < params.length; i = i + 1) {
+        var singleParam = params[i].split('=');
+        if (singleParam[0] == param) {
+            return singleParam[1];
+        }
+    }
+}
+
+
+
